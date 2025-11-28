@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useFormState, useFormStatus } from 'react-dom'
+import { useState, useEffect, useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card'
 import { saveFreeDays } from './actions'
 import { useToast } from '@/hooks/use-toast'
-import { CalendarDays, CheckCircle, AlertTriangle } from 'lucide-react'
+import { CalendarDays } from 'lucide-react'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -35,7 +35,7 @@ export function AvailabilityManager({ initialFreeDays }: AvailabilityManagerProp
   )
   const { toast } = useToast()
 
-  const [state, formAction] = useFormState(saveFreeDays, null)
+  const [state, formAction] = useActionState(saveFreeDays, null)
 
   useEffect(() => {
     if (state?.message) {
