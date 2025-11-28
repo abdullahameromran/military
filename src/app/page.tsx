@@ -31,7 +31,6 @@ async function getAvailability() {
       .select('date')
       .gte('date', new Date().toISOString())
       .order('date', { ascending: true })
-      .limit(5)
     
     if (upcomingError) throw upcomingError;
     
