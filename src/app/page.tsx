@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { CheckCircle2, XCircle, ShieldCheck, UserCog, CalendarDays } from 'lucide-react'
+import { CheckCircle2, XCircle, ShieldCheck, UserCog, CalendarDays, History } from 'lucide-react'
 import { format } from 'date-fns'
 
 export const revalidate = 0 // Revalidate on every request
@@ -32,14 +32,25 @@ async function getAvailability() {
       .select('date')
       .gte('date', today)
       .order('date', { ascending: true })
-      .limit(10)
+      .limit(5)
     
     if (upcomingError) throw upcomingError;
+
+    // Fetch past free days
+    const { data: pastData, error: pastError } = await supabase
+      .from('free_days')
+      .select('date')
+      .lt('date', today)
+      .order('date', { ascending: false })
+      .limit(5)
+
+    if (pastError) throw pastError;
 
     const isUnavailableToday = todayData && todayData.length > 0
     return { 
       isAvailableToday: !isUnavailableToday, 
       upcomingUnavailableDays: upcomingData.map((d: any) => d.date),
+      pastUnavailableDays: pastData.map((d: any) => d.date),
       error: null 
     }
   } catch (e: any) {
@@ -47,13 +58,14 @@ async function getAvailability() {
     return { 
       isAvailableToday: true, 
       upcomingUnavailableDays: [], 
+      pastUnavailableDays: [],
       error: "Could not connect to the database. Displaying default status." 
     }
   }
 }
 
 export default async function Home() {
-  const { isAvailableToday, upcomingUnavailableDays, error } = await getAvailability()
+  const { isAvailableToday, upcomingUnavailableDays, pastUnavailableDays, error } = await getAvailability()
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -118,6 +130,26 @@ export default async function Home() {
               <CardContent className="flex flex-col items-center justify-center pt-0 px-8 pb-8">
                 <ul className="list-disc list-inside space-y-2 text-center w-full bg-muted/50 p-4 rounded-lg">
                   {upcomingUnavailableDays.map((day: string) => (
+                    <li key={day} className="font-medium text-sm">
+                      {format(new Date(day + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </>
+          )}
+
+          {pastUnavailableDays && pastUnavailableDays.length > 0 && (
+            <>
+              <CardHeader className="pt-0">
+                <CardTitle className="text-xl flex items-center gap-2 justify-center">
+                  <History className="h-5 w-5" />
+                  Recent Past Unavailable Days
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center pt-0 px-8 pb-8">
+                <ul className="list-disc list-inside space-y-2 text-center w-full bg-muted/50 p-4 rounded-lg">
+                  {pastUnavailableDays.map((day: string) => (
                     <li key={day} className="font-medium text-sm">
                       {format(new Date(day + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
                     </li>
