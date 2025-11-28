@@ -20,7 +20,7 @@ function SubmitButton() {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" disabled={pending} className="w-full">
-      {pending ? 'Saving...' : 'Save Availability'}
+      {pending ? 'Saving...' : 'Save Free Days'}
     </Button>
   )
 }
@@ -60,11 +60,10 @@ export function AvailabilityManager({ initialFreeDays }: AvailabilityManagerProp
       <CardHeader>
         <div className="flex items-center gap-2">
           <CalendarDays className="h-6 w-6 text-primary" />
-          <CardTitle className="text-xl font-bold">Manage Availability</CardTitle>
+          <CardTitle className="text-xl font-bold">Manage Free Days</CardTitle>
         </div>
         <CardDescription>
-          Select the days you are unavailable. These will be shown on the public
-          status page.
+          Select the days you are free from military service.
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
