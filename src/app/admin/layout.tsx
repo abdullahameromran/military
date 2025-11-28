@@ -9,7 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 font-semibold text-lg text-primary">
               <ShieldCheck className="h-6 w-6" />
-              <span>DutyNotifier</span>
+              <span>Freedom Countdown</span>
             </Link>
             <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
               <Eye className="h-4 w-4" />

@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
 export const metadata: Metadata = {
-  title: 'DutyNotifier',
+  title: 'Freedom Countdown',
   description: 'Check availability status in real-time.',
 };
 
