@@ -16,10 +16,10 @@ async function getFreeDays() {
     console.error("Supabase fetch error:", error.message);
     // This error often means the table doesn't exist.
     // We'll return an empty array and show a warning in the UI.
-    return { freeDays: [], error: "Could not fetch availability. Please ensure the 'free_days' table exists in your Supabase project." };
+    return { freeDays: [], error: "Could not fetch availability. Using in-memory store as a fallback." };
   }
 
-  return { freeDays: data.map(d => d.date), error: null };
+  return { freeDays: data.map((d: any) => d.date), error: null };
 }
 
 export default async function AdminPage() {
@@ -39,13 +39,9 @@ export default async function AdminPage() {
       {error && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Database Error</AlertTitle>
+          <AlertTitle>Database Notice</AlertTitle>
           <AlertDescription>
-            {error} You can create it with the following SQL schema:
-            <code className="block bg-muted p-2 rounded-md my-2 text-xs">
-              CREATE TABLE free_days (id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY, date DATE NOT NULL UNIQUE, created_at TIMESTAMPTZ DEFAULT now() NOT NULL);
-            </code>
-            Also, ensure Row Level Security (RLS) is configured if enabled.
+            {error} You can connect to a real Supabase database by setting the environment variables in the `.env` file.
           </AlertDescription>
         </Alert>
       )}

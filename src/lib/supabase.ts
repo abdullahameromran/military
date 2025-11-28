@@ -14,8 +14,63 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase URL or anon key environment variables.')
-}
+// In-memory store for free days
+let freeDaysStore: { date: string }[] = [];
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const mockSupabase = {
+  from: (table: string) => {
+    if (table === 'free_days') {
+      return {
+        select: (columns = '*') => ({
+          order: (column: string, options: { ascending: boolean }) => ({
+            then: (callback: (result: { data: any[], error: any }) => void) => {
+              const sortedData = [...freeDaysStore].sort((a, b) => {
+                const dateA = new Date(a.date).getTime();
+                const dateB = new Date(b.date).getTime();
+                return options.ascending ? dateA - dateB : dateB - dateA;
+              });
+              callback({ data: sortedData, error: null });
+              return Promise.resolve({ data: sortedData, error: null });
+            }
+          }),
+           eq: (column: string, value: any) => ({
+            limit: (count: number) => {
+               return Promise.resolve({
+                data: freeDaysStore.filter(d => d.date === value),
+                error: null
+              });
+            }
+          }),
+           then: (callback: (result: { data: any[], error: any }) => void) => {
+             callback({ data: freeDaysStore, error: null });
+             return Promise.resolve({ data: freeDaysStore, error: null });
+           }
+        }),
+        insert: (rows: { date: string }[]) => {
+          rows.forEach(row => {
+            if (!freeDaysStore.find(d => d.date === row.date)) {
+              freeDaysStore.push(row);
+            }
+          });
+          return Promise.resolve({ error: null });
+        },
+        delete: () => ({
+          gt: (column: string, value: number) => {
+            freeDaysStore = [];
+            return Promise.resolve({ error: null });
+          }
+        }),
+      };
+    }
+    return {
+      select: () => Promise.resolve({ data: [], error: { message: `Table "${table}" does not exist.` } }),
+      insert: () => Promise.resolve({ error: { message: `Table "${table}" does not exist.` } }),
+      delete: () => Promise.resolve({ error: { message: `Table "${table}" does not exist.` } }),
+    };
+  },
+};
+
+
+const useMock = !supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-supabase-url');
+
+export const supabase = useMock ? mockSupabase as any : createClient(supabaseUrl, supabaseAnonKey);

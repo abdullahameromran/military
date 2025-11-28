@@ -31,7 +31,7 @@ async function getAvailability() {
 
     const isUnavailable = data && data.length > 0
     return { isAvailable: !isUnavailable, error: null }
-  } catch (e) {
+  } catch (e: any) {
     console.error('Catch error:', e)
     return { isAvailable: true, error: "An unexpected error occurred. Displaying default status." }
   }
