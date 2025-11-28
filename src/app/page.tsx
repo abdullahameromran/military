@@ -3,13 +3,13 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { CheckCircle2, XCircle, ShieldCheck, UserCog } from 'lucide-react'
+import { CheckCircle2, XCircle, ShieldCheck, UserCog, CalendarDays } from 'lucide-react'
+import { format } from 'date-fns'
 
 export const revalidate = 0 // Revalidate on every request
 
@@ -17,31 +17,46 @@ async function getAvailability() {
   const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD format
 
   try {
-    const { data, error } = await supabase
+    // Check for today
+    const { data: todayData, error: todayError } = await supabase
       .from('free_days')
       .select('date')
       .eq('date', today)
       .limit(1)
 
-    if (error) {
-      console.error('Supabase error:', error.message)
-      // If table doesn't exist or there's an error, assume available as a fallback
-      return { isAvailable: true, error: "Could not connect to the database. Displaying default status." }
-    }
+    if (todayError) throw todayError;
 
-    const isUnavailable = data && data.length > 0
-    return { isAvailable: !isUnavailable, error: null }
+    // Fetch upcoming free days
+    const { data: upcomingData, error: upcomingError } = await supabase
+      .from('free_days')
+      .select('date')
+      .gte('date', today)
+      .order('date', { ascending: true })
+      .limit(10)
+    
+    if (upcomingError) throw upcomingError;
+
+    const isUnavailableToday = todayData && todayData.length > 0
+    return { 
+      isAvailableToday: !isUnavailableToday, 
+      upcomingUnavailableDays: upcomingData.map((d: any) => d.date),
+      error: null 
+    }
   } catch (e: any) {
-    console.error('Catch error:', e)
-    return { isAvailable: true, error: "An unexpected error occurred. Displaying default status." }
+    console.error('Supabase error:', e.message)
+    return { 
+      isAvailableToday: true, 
+      upcomingUnavailableDays: [], 
+      error: "Could not connect to the database. Displaying default status." 
+    }
   }
 }
 
 export default async function Home() {
-  const { isAvailable, error } = await getAvailability()
+  const { isAvailableToday, upcomingUnavailableDays, error } = await getAvailability()
 
   return (
-    <div className="flex flex-col min-h-screen bg-background font-body">
+    <div className="flex flex-col min-h-screen bg-background">
       <header className="py-4 px-4 sm:px-6 lg:px-8">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 font-semibold text-lg text-primary">
@@ -68,7 +83,7 @@ export default async function Home() {
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center p-8">
             <div className="flex items-center gap-4">
-              {isAvailable ? (
+              {isAvailableToday ? (
                 <CheckCircle2
                   className="h-16 w-16 text-green-500"
                   aria-label="Available"
@@ -81,19 +96,43 @@ export default async function Home() {
               )}
               <p
                 className={`text-4xl font-extrabold ${
-                  isAvailable ? 'text-green-600' : 'text-red-600'
+                  isAvailableToday ? 'text-green-600' : 'text-red-600'
                 }`}
               >
-                {isAvailable ? 'Available' : 'Unavailable'}
+                {isAvailableToday ? 'Available' : 'Unavailable'}
               </p>
             </div>
+             <p className="text-sm text-muted-foreground mt-2">
+               Today is {format(new Date(), 'EEEE, MMMM d, yyyy')}
+            </p>
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <p className="text-xs text-muted-foreground">
+
+          {upcomingUnavailableDays && upcomingUnavailableDays.length > 0 && (
+            <>
+              <CardHeader className="pt-0">
+                <CardTitle className="text-xl flex items-center gap-2 justify-center">
+                  <CalendarDays className="h-5 w-5" />
+                  Upcoming Unavailable Days
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center pt-0 px-8 pb-8">
+                <ul className="list-disc list-inside space-y-2 text-center w-full bg-muted/50 p-4 rounded-lg">
+                  {upcomingUnavailableDays.map((day: string) => (
+                    <li key={day} className="font-medium text-sm">
+                      {format(new Date(day + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </>
+          )}
+
+          <CardHeader className="pt-0">
+            <p className="text-xs text-muted-foreground text-center">
               Last checked: {new Date().toLocaleTimeString()}
               {error && <span className="text-destructive block mt-2 text-center">{error}</span>}
             </p>
-          </CardFooter>
+          </CardHeader>
         </Card>
       </main>
     </div>
