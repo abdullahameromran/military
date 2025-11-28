@@ -52,6 +52,7 @@ async function getAvailability() {
     }
   } catch (e: any) {
     console.error('Supabase error:', e.message)
+    // In case of a database error, we'll default to a safe state.
     return { 
       isAvailableToday: true, 
       upcomingUnavailableDays: [], 
@@ -63,6 +64,8 @@ async function getAvailability() {
 
 export default async function Home() {
   const { isAvailableToday, upcomingUnavailableDays, pastUnavailableDays, error } = await getAvailability()
+
+  const isTrulyFree = isAvailableToday && upcomingUnavailableDays.length === 0;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -92,7 +95,7 @@ export default async function Home() {
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center p-8">
             <div className="flex items-center gap-4">
-              {isAvailableToday ? (
+              {isTrulyFree ? (
                 <CheckCircle2
                   className="h-16 w-16 text-green-500"
                   aria-label="Available"
@@ -105,10 +108,10 @@ export default async function Home() {
               )}
               <p
                 className={`text-4xl font-extrabold ${
-                  isAvailableToday ? 'text-green-600' : 'text-red-600'
+                  isTrulyFree ? 'text-green-600' : 'text-red-600'
                 }`}
               >
-                {isAvailableToday ? 'HE IS FREE!' : 'Nope. Military service calls.'}
+                {isTrulyFree ? 'HE IS FREE!' : 'Nope. Military service calls.'}
               </p>
             </div>
              <p className="text-sm text-muted-foreground mt-2">
@@ -121,7 +124,7 @@ export default async function Home() {
               <CardHeader className="pt-0">
                 <CardTitle className="text-xl flex items-center gap-2 justify-center">
                   <CalendarDays className="h-5 w-5" />
-                  Upcoming Fun-Free Zones
+                  Upcoming Military Service Days
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center pt-0 px-8 pb-8">
