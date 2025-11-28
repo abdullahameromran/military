@@ -17,7 +17,6 @@ async function getAvailability() {
   const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD format
 
   try {
-    // Check for today
     const { data: todayData, error: todayError } = await supabase
       .from('free_days')
       .select('date')
@@ -26,7 +25,6 @@ async function getAvailability() {
 
     if (todayError) throw todayError;
 
-    // Fetch upcoming free days
     const { data: upcomingData, error: upcomingError } = await supabase
       .from('free_days')
       .select('date')
@@ -36,7 +34,6 @@ async function getAvailability() {
     
     if (upcomingError) throw upcomingError;
 
-    // Fetch past free days
     const { data: pastData, error: pastError } = await supabase
       .from('free_days')
       .select('date')
@@ -87,10 +84,10 @@ export default async function Home() {
         <Card className="w-full max-w-md shadow-lg animate-fade-in-up">
           <CardHeader>
             <CardTitle className="text-2xl text-center font-bold text-primary">
-              Current Availability
+              Abdullah's Freedom Meter
             </CardTitle>
             <CardDescription className="text-center">
-              Status updated in real-time
+              Is he free from the shackles of military service? Let's find out!
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center p-8">
@@ -111,7 +108,7 @@ export default async function Home() {
                   isAvailableToday ? 'text-green-600' : 'text-red-600'
                 }`}
               >
-                {isAvailableToday ? 'Available' : 'Unavailable'}
+                {isAvailableToday ? 'HE IS FREE!' : 'Nope. Military service calls.'}
               </p>
             </div>
              <p className="text-sm text-muted-foreground mt-2">
@@ -124,7 +121,7 @@ export default async function Home() {
               <CardHeader className="pt-0">
                 <CardTitle className="text-xl flex items-center gap-2 justify-center">
                   <CalendarDays className="h-5 w-5" />
-                  Upcoming Unavailable Days
+                  Upcoming Fun-Free Zones
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center pt-0 px-8 pb-8">
@@ -144,7 +141,7 @@ export default async function Home() {
               <CardHeader className="pt-0">
                 <CardTitle className="text-xl flex items-center gap-2 justify-center">
                   <History className="h-5 w-5" />
-                  Recent Past Unavailable Days
+                  The Archives of Un-Fun
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center pt-0 px-8 pb-8">
