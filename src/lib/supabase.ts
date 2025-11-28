@@ -22,28 +22,31 @@ const mockSupabase = {
     if (table === 'free_days') {
       return {
         select: (columns = '*') => ({
-          order: (column: string, options: { ascending: boolean }) => ({
-            then: (callback: (result: { data: any[], error: any }) => void) => {
-              const sortedData = [...freeDaysStore].sort((a, b) => {
-                const dateA = new Date(a.date).getTime();
-                const dateB = new Date(b.date).getTime();
-                return options.ascending ? dateA - dateB : dateB - dateA;
+          order: (column: string, options: { ascending: boolean }) => {
+             return Promise.resolve({
+                data: [...freeDaysStore].sort((a, b) => {
+                    const dateA = new Date(a.date).getTime();
+                    const dateB = new Date(b.date).getTime();
+                    return options.ascending ? dateA - dateB : dateB - dateA;
+                }),
+                error: null
               });
-              callback({ data: sortedData, error: null });
-              return Promise.resolve({ data: sortedData, error: null });
-            }
-          }),
+          },
            eq: (column: string, value: any) => ({
             limit: (count: number) => {
                return Promise.resolve({
-                data: freeDaysStore.filter(d => d.date === value),
+                data: freeDaysStore.filter(d => d.date === value).slice(0, count),
                 error: null
               });
             }
           }),
-           then: (callback: (result: { data: any[], error: any }) => void) => {
-             callback({ data: freeDaysStore, error: null });
-             return Promise.resolve({ data: freeDaysStore, error: null });
+          // This handles the simple select without other filters
+          then: (callback: (result: { data: any[], error: any }) => void) => {
+             const result = { data: freeDaysStore, error: null };
+             if (callback) {
+                callback(result);
+             }
+             return Promise.resolve(result);
            }
         }),
         insert: (rows: { date: string }[]) => {
@@ -62,10 +65,11 @@ const mockSupabase = {
         }),
       };
     }
+    // Default mock for any other table
     return {
-      select: () => Promise.resolve({ data: [], error: { message: `Table "${table}" does not exist.` } }),
-      insert: () => Promise.resolve({ error: { message: `Table "${table}" does not exist.` } }),
-      delete: () => Promise.resolve({ error: { message: `Table "${table}" does not exist.` } }),
+      select: () => Promise.resolve({ data: [], error: { message: `Table "${table}" does not exist in mock.` } }),
+      insert: () => Promise.resolve({ error: { message: `Table "${table}" does not exist in mock.` } }),
+      delete: () => Promise.resolve({ error: { message: `Table "${table}" does not exist in mock.` } }),
     };
   },
 };
