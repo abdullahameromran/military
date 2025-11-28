@@ -10,7 +10,7 @@ export async function saveFreeDays(prevState: any, formData: FormData) {
   try {
     // Delete all existing free days to replace with the new set.
     // In a multi-user app, you'd add a `where` clause for the current user.
-    const { error: deleteError } = await supabase.from('free_days').delete().gt('id', -1);
+    const { error: deleteError } = await supabase.from('free_days').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     if (deleteError) throw deleteError;
 
     if (dates.length > 0) {
