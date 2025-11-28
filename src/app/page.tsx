@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, UserCog, CalendarDays, ShieldCheck } from 'lucide-react'
 import { format } from 'date-fns'
+import { Countdown } from './countdown'
 
 export const revalidate = 0 // Revalidate on every request
 
@@ -42,7 +43,6 @@ async function getAvailability() {
     }
   } catch (e: any) {
     console.error('Supabase error:', e.message)
-    // In case of a database error, we'll default to a safe state (not free).
     return { 
       isAvailableToday: false, 
       upcomingFreeDays: [], 
@@ -53,15 +53,16 @@ async function getAvailability() {
 
 export default async function Home() {
   const { isAvailableToday, upcomingFreeDays, error } = await getAvailability()
+  const nextFreeDay = upcomingFreeDays.length > 0 ? upcomingFreeDays[0] : null;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="py-4 px-4 sm:px-6 lg:px-8">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2 font-semibold text-lg text-primary">
+          <Link href="/" className="flex items-center gap-2 font-semibold text-lg text-primary">
             <ShieldCheck className="h-6 w-6" />
             <span>DutyNotifier</span>
-          </div>
+          </Link>
           <Button asChild variant="ghost">
             <Link href="/admin">
               <UserCog className="mr-2 h-4 w-4" />
@@ -81,25 +82,32 @@ export default async function Home() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center p-8">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center gap-4 min-h-[80px]">
               {isAvailableToday ? (
-                <CheckCircle2
-                  className="h-16 w-16 text-green-500"
-                  aria-label="Available"
-                />
+                <>
+                  <CheckCircle2
+                    className="h-16 w-16 text-green-500"
+                    aria-label="Available"
+                  />
+                  <p
+                    className={`text-4xl font-extrabold text-green-600`}
+                  >
+                    HE IS FREE!
+                  </p>
+                </>
               ) : (
-                <XCircle
-                  className="h-16 w-16 text-red-500"
-                  aria-label="Unavailable"
-                />
+                <>
+                  <XCircle
+                    className="h-16 w-16 text-red-500"
+                    aria-label="Unavailable"
+                  />
+                  {nextFreeDay ? (
+                    <Countdown nextFreeDay={nextFreeDay} />
+                  ) : (
+                    <p className="text-2xl font-bold text-red-600">Nope. Duty calls.</p>
+                  )}
+                </>
               )}
-              <p
-                className={`text-4xl font-extrabold ${
-                  isAvailableToday ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {isAvailableToday ? 'HE IS FREE!' : 'Nope. Military service calls.'}
-              </p>
             </div>
              <p className="text-sm text-muted-foreground mt-2">
                Today is {format(new Date(), 'EEEE, MMMM d, yyyy')}
